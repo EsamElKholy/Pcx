@@ -8,11 +8,13 @@ Shader "Point Cloud/GeometryPoint"
         _MainTex ("Texture", 2D) = "white" {}
         _Tint("Tint", Color) = (0.5, 0.5, 0.5, 1)
         _PointSize("Point Size", Float) = 0.05
+        _Cutoff("Cutoff", Float) = 0.5
+        _MipScale("Mip Scale", Range(0,1)) = 1
         [Toggle] _Distance("Apply Distance", Float) = 1
     }
     SubShader
     {
-Tags { "RenderQueue"="AlphaTest" "RenderType"="TransparentCutout" }
+        Tags { "RenderQueue"="AlphaTest" "RenderType"="TransparentCutout" }
         Cull Off
         Pass
         {
@@ -22,7 +24,6 @@ Tags { "RenderQueue"="AlphaTest" "RenderType"="TransparentCutout" }
             #pragma geometry QuadGeometry
             #pragma fragment Fragment
 
-            //#pragma multi_compile_fog
             #pragma multi_compile _ UNITY_COLORSPACE_GAMMA
             #pragma multi_compile _ _DISTANCE_ON
             #pragma multi_compile _ _COMPUTE_BUFFER
@@ -47,7 +48,6 @@ Tags { "RenderQueue"="AlphaTest" "RenderType"="TransparentCutout" }
                 float4 position : SV_Position;
                 half3 color : COLOR;
                 half2 uv : TEXCOORD0;
-                //UNITY_FOG_COORDS(0)
             };
 
             half4 _Tint;
@@ -58,10 +58,6 @@ Tags { "RenderQueue"="AlphaTest" "RenderType"="TransparentCutout" }
             sampler2D _MainTex;
             half4 _MainTex_ST;
             float4 _MainTex_TexelSize;
-
-            half3 _BillboardDirection;
-            half3 _BillboardUp;
-            half3 _BillboardRight;
 
             #define PCX_MAX_BRIGHTNESS 16
 
@@ -120,28 +116,8 @@ Tags { "RenderQueue"="AlphaTest" "RenderType"="TransparentCutout" }
             #else
                 o.psize = _PointSize;
             #endif
-                UNITY_TRANSFER_FOG(o, pos);
+
                 return o;
-            }
-
-            float3 GetBillboardViewPosition(float3 objectPos)
-            {
-                float3 centerViewPos = mul(UNITY_MATRIX_V, float4(unity_ObjectToWorld._m03_m13_m23, 1.0));
-                float3 centerViewDirection = (UNITY_MATRIX_P._m33 == 0.0) ? normalize(centerViewPos) : float3(0.0, 0.0, -1.0);
-                centerViewPos += centerViewDirection * 1;
-
-                float3 scale = float3(length(unity_ObjectToWorld._m00_m10_m20), length(unity_ObjectToWorld._m01_m11_m21), length(unity_ObjectToWorld._m02_m12_m22));
-                float3 viewPos = (objectPos * scale);
-                viewPos.x = viewPos.x;
-                float orientationMode = 1;
-                //view or world mode
-                float3 zenithVector = orientationMode == 1 ? float3(0.0, 1.0, 0.0) : UNITY_MATRIX_V._m01_m11_m21;
-                float3 rightVector = normalize(cross(centerViewDirection, zenithVector));
-                float3 upVector = normalize(cross(rightVector, centerViewDirection));
-
-                viewPos = (viewPos.x * rightVector) + (viewPos.y * upVector) + (viewPos.z * centerViewDirection);
-
-                return viewPos + centerViewPos;
             }
 
             [maxvertexcount(6)]
@@ -202,25 +178,23 @@ Tags { "RenderQueue"="AlphaTest" "RenderType"="TransparentCutout" }
 	            }
             }
 
-            float CalcMipLevel(float2 texture_coord)
+            half CalcMipLevel(half2 texture_coord)
             {
-                float2 dx = ddx(texture_coord);
-                float2 dy = ddy(texture_coord);
-                float delta_max_sqr = max(dot(dx, dx), dot(dy, dy));
+                half2 dx = ddx(texture_coord);
+                half2 dy = ddy(texture_coord);
+                half delta_max_sqr = max(dot(dx, dx), dot(dy, dy));
                 
                 return max(0.0, 0.5 * log2(delta_max_sqr));
             }
 
-            half4 Fragment(GeometryToFragment input, fixed facing : VFACE) : SV_Target
+            half4 Fragment(GeometryToFragment input) : SV_Target
             {
                 // sample the texture
                 half4 col = tex2D(_MainTex, input.uv);
 
                 col = half4(input.color, _Tint.a) * col;
                 col.a *= 1 + max(0, CalcMipLevel(input.uv * _MainTex_TexelSize.zw)) * _MipScale;
-                // rescale alpha by partial derivative
                 col.a = (col.a - _Cutoff) / max(fwidth(col.a), 0.0001) + 0.5;
-                UNITY_APPLY_FOG(input.fogCoord, col);
                 
                 return col;
             }

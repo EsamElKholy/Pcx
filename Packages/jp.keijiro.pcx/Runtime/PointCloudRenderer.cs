@@ -103,7 +103,10 @@ namespace Pcx
                 _pointMaterial = new Material(_pointShader);
                 _pointMaterial.hideFlags = HideFlags.DontSave;
                 _pointMaterial.EnableKeyword("_COMPUTE_BUFFER");
+            }
 
+            if (_diskMaterial == null)
+            {
                 _diskMaterial = new Material(_diskShader);
                 _diskMaterial.hideFlags = HideFlags.DontSave;
                 _diskMaterial.EnableKeyword("_COMPUTE_BUFFER");

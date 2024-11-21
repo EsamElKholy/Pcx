@@ -33,7 +33,7 @@ Material:
     - _Cutoff: 0.4
     - _Distance: 0
     - _MipScale: 1
-    - _PointSize: 0.005
+    - _PointSize: 0.01
     m_Colors:
     - _Tint: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
