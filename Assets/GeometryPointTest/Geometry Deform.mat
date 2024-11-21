@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Geometry Bee
+  m_Name: Geometry Deform
   m_Shader: {fileID: 4800000, guid: 3a9785d47c155be49a7d3d0886de65ca, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -33,7 +33,7 @@ Material:
     - _Cutoff: 0.4
     - _Distance: 0
     - _MipScale: 1
-    - _PointSize: 0.00001
+    - _PointSize: 0.005
     m_Colors:
     - _Tint: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []

@@ -42,8 +42,10 @@ namespace Pcx
 
         #region Internal resources
 
-        [SerializeField, HideInInspector] Shader _pointShader = null;
-        [SerializeField, HideInInspector] Shader _diskShader = null;
+        [SerializeField] Shader _pointShader = null;
+        [SerializeField] Shader _diskShader = null;
+        [SerializeField] bool forceUsePointShader=false;
+        [SerializeField] Material customPointMaterial;
 
         #endregion
 
@@ -58,7 +60,13 @@ namespace Pcx
 
         void OnValidate()
         {
-            _pointSize = Mathf.Max(0, _pointSize);
+            if (customPointMaterial)
+            {
+                _pointMaterial = customPointMaterial;
+            }          
+
+            _pointMaterial.hideFlags = HideFlags.DontSave;
+            _pointMaterial.EnableKeyword("_COMPUTE_BUFFER");
         }
 
         void OnDestroy()
@@ -106,12 +114,13 @@ namespace Pcx
             var pointBuffer = sourceBuffer != null ?
                 sourceBuffer : _sourceData.computeBuffer;
 
-            if (_pointSize == 0)
+            if (_pointSize == 0 || forceUsePointShader)
             {
                 _pointMaterial.SetPass(0);
                 _pointMaterial.SetColor("_Tint", _pointTint);
                 _pointMaterial.SetMatrix("_Transform", transform.localToWorldMatrix);
                 _pointMaterial.SetBuffer("_PointBuffer", pointBuffer);
+                _pointMaterial.SetFloat("_PointSize", pointSize);
                 #if UNITY_2019_1_OR_NEWER
                 Graphics.DrawProceduralNow(MeshTopology.Points, pointBuffer.count, 1);
                 #else
