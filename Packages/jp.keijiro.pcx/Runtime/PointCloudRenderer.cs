@@ -63,15 +63,14 @@ namespace Pcx
             if (customPointMaterial)
             {
                 _pointMaterial = customPointMaterial;
-            }          
-
-            _pointMaterial.hideFlags = HideFlags.DontSave;
-            _pointMaterial.EnableKeyword("_COMPUTE_BUFFER");
+                _pointMaterial.hideFlags = HideFlags.DontSave;
+                _pointMaterial.EnableKeyword("_COMPUTE_BUFFER");
+            }   
         }
 
         void OnDestroy()
         {
-            if (_pointMaterial != null)
+            if (_pointMaterial != null && _pointMaterial != customPointMaterial)
             {
                 if (Application.isPlaying)
                 {
